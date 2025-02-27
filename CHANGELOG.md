@@ -11,19 +11,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- only publish src
-- add release-plz
-- update benchmark (#15)
-- *(deps)* update github-actions (#13)
-- remove unused `profile.release`
-- reduce generic expansion on functino `glob_match`
-- add justfile
-- clean up trigger
-- ignore typos from the tests directory
-- cargo clippy --fix
-- update rustfmt
-- add rust-toolchain.toml
-- update
-- add renovate bot
-- update package repository
-- update LICENSE and authors
+- reduce generic expansion on function `glob_match`

@@ -11,13 +11,6 @@ documentation = "https://docs.rs/fast-glob"
 description = "A high-performance glob matching crate for Rust"
 repository = "https://github.com/oxc-project/fast-glob.git"
 
-[dev-dependencies]
-criterion = "0.5.1"
-glob = "0.3.2"
-globset = "0.4.15"
-glob-match = "0.2.1"
-codspeed-criterion-compat = "2.7.2"
-
 [[test]]
 name = "test"
 path = "tests/test.rs"
@@ -28,3 +21,13 @@ harness = false
 
 [dependencies]
 arrayvec = "0.7.6"
+
+[dev-dependencies]
+glob = "0.3.2"
+globset = "0.4.15"
+glob-match = "0.2.1"
+criterion2 = { version = "2.0.0", default-features = false }
+
+[features]
+default = []
+codspeed = ["criterion2/codspeed"]

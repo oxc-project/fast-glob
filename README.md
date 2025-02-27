@@ -74,7 +74,7 @@ globset_pre_compiled       time:   [91.498 ns 91.648 ns 91.883 ns]
 - `glob_match("**/foo{bar,b*z}", "foobuzz")`
 - `glob_match("**/{a,b}/c.png", "some/a/b/c.png")`
 
-Due to these limitations, `brace expansion` requires a different implementation that can handle the complexity of such patterns, resulting in some performance trade-offs.
+Due to these limitations, `brace expansion` requires a different implementation that can handle the complexity of such patterns, without any performance compromise.
 
 ## Credits
 

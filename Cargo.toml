@@ -27,7 +27,7 @@ arrayvec = "0.7.6"
 glob = "0.3.2"
 globset = "0.4.15"
 glob-match = "0.2.1"
-criterion2 = { version = "2.0.0", default-features = false }
+criterion2 = { version = "3.0.0", default-features = false }
 
 [features]
 default = []

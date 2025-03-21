@@ -48,6 +48,8 @@ globset                    time:   [21.027 µs 21.035 µs 21.045 µs]
 glob_match                 time:   [203.66 ns 203.87 ns 204.09 ns]
 glob_pre_compiled          time:   [63.569 ns 63.684 ns 63.800 ns]
 globset_pre_compiled       time:   [91.543 ns 91.591 ns 91.651 ns]
+wax                        time:   [49.102 µs 49.297 µs 49.506 µs]
+wax-pre-compiled           time:   [52.024 ns 52.127 ns 52.241 ns]
 ```
 
 ### Test Case 2
@@ -62,6 +64,8 @@ mine                       time:   [198.63 ns 199.26 ns 200.08 ns]
 globset                    time:   [41.489 µs 41.575 µs 41.681 µs]
 glob_match                 time:   [367.32 ns 368.10 ns 368.77 ns]
 globset_pre_compiled       time:   [91.498 ns 91.648 ns 91.883 ns]
+wax                        time:   [58.976 µs 59.122 µs 59.292 µs]
+wax-pre-compiled           time:   [52.805 ns 53.309 ns 54.156 ns]
 ```
 
 ## FAQ

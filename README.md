@@ -42,14 +42,14 @@ const PATH: &'static str = "some/a/bigger/path/to/the/crazy/needle.txt";
 ```
 
 ```
-mine                       time:   [87.185 ns 87.307 ns 87.440 ns]
-glob                       time:   [376.83 ns 377.42 ns 378.09 ns]
-globset                    time:   [21.027 µs 21.035 µs 21.045 µs]
-glob_match                 time:   [203.66 ns 203.87 ns 204.09 ns]
-glob_pre_compiled          time:   [63.569 ns 63.684 ns 63.800 ns]
-globset_pre_compiled       time:   [91.543 ns 91.591 ns 91.651 ns]
-wax                        time:   [49.102 µs 49.297 µs 49.506 µs]
-wax-pre-compiled           time:   [52.024 ns 52.127 ns 52.241 ns]
+mine                       time:   [84.413 ns 84.548 ns 84.661 ns]
+glob                       time:   [398.63 ns 399.36 ns 400.10 ns]
+globset                    time:   [30.919 µs 30.942 µs 30.976 µs]
+glob_match                 time:   [224.16 ns 224.57 ns 225.03 ns]
+glob_pre_compiled          time:   [78.929 ns 79.362 ns 79.801 ns]
+globset_pre_compiled       time:   [103.17 ns 103.22 ns 103.27 ns]
+wax                        time:   [84.712 µs 84.831 µs 84.953 µs]
+wax-pre-compiled           time:   [43.661 ns 43.679 ns 43.701 ns]
 ```
 
 ### Test Case 2
@@ -60,12 +60,12 @@ const PATH: &'static str = "some/a/bigger/path/to/the/crazy/needle.txt";
 ```
 
 ```
-mine                       time:   [198.63 ns 199.26 ns 200.08 ns]
-globset                    time:   [41.489 µs 41.575 µs 41.681 µs]
-glob_match                 time:   [367.32 ns 368.10 ns 368.77 ns]
-globset_pre_compiled       time:   [91.498 ns 91.648 ns 91.883 ns]
-wax                        time:   [58.976 µs 59.122 µs 59.292 µs]
-wax-pre-compiled           time:   [52.805 ns 53.309 ns 54.156 ns]
+mine                       time:   [188.01 ns 188.40 ns 188.79 ns]
+globset                    time:   [38.565 µs 38.684 µs 38.841 µs]
+glob_match                 time:   [381.81 ns 383.12 ns 384.43 ns]
+globset_pre_compiled       time:   [103.29 ns 103.35 ns 103.42 ns]
+wax                        time:   [107.04 µs 107.38 µs 107.78 µs]
+wax-pre-compiled           time:   [43.665 ns 43.764 ns 43.918 ns]
 ```
 
 ## FAQ

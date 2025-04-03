@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
+use wax::Pattern;
 
 fn simple_match(c: &mut Criterion) {
     let mut group = c.benchmark_group("simple_match");
@@ -28,6 +29,13 @@ fn simple_match(c: &mut Criterion) {
 
     group.bench_function("fast-glob", |b| b.iter(|| fast_glob::glob_match(GLOB, PATH)));
 
+    group.bench_function("wax", |b| b.iter(|| wax::Glob::new(GLOB).unwrap().is_match(PATH)));
+
+    group.bench_function("wax-pre-compiled", |b| {
+        let matcher = wax::Glob::new(GLOB).unwrap();
+        b.iter(|| matcher.is_match(PATH))
+    });
+
     group.finish();
 }
 
@@ -50,6 +58,13 @@ fn brace_expansion(c: &mut Criterion) {
 
     group.bench_function("fast-glob", |b| {
         b.iter(|| fast_glob::glob_match(GLOB, PATH));
+    });
+
+    group.bench_function("wax", |b| b.iter(|| wax::Glob::new(GLOB).unwrap().is_match(PATH)));
+
+    group.bench_function("wax-pre-compiled", |b| {
+        let matcher = wax::Glob::new(GLOB).unwrap();
+        b.iter(|| matcher.is_match(PATH))
     });
 
     group.finish();

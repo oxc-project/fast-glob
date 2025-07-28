@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.6](https://github.com/oxc-project/fast-glob/compare/v0.4.5...v0.4.6) - 2025-07-28
+## [1.0.0](https://github.com/oxc-project/fast-glob/compare/v0.4.5...v1.0.0) - 2025-07-27
 
 ### Other
 

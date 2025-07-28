@@ -1,6 +1,6 @@
 [package]
 name = "fast-glob"
-version = "0.4.6"
+version = "1.0.0"
 edition = "2021"
 license = "MIT"
 

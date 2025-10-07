@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
-      - uses: oxc-project/setup-rust@cd82e1efec7fef815e2c23d296756f31c7cdc03d # v1.0.0
+      - uses: oxc-project/setup-rust@1ff88fdaffd6ae35c0fb32ccc159340b37d0beac # v1.0.7
         with:
           save-cache: ${{ github.ref_name == 'main' }}
       - run: cargo check --all-targets --all-features
@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
 
-      - uses: oxc-project/setup-rust@cd82e1efec7fef815e2c23d296756f31c7cdc03d # v1.0.0
+      - uses: oxc-project/setup-rust@1ff88fdaffd6ae35c0fb32ccc159340b37d0beac # v1.0.7
         with:
           components: clippy rust-docs rustfmt
 

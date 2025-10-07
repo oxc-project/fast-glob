@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
 
-      - uses: oxc-project/setup-rust@cd82e1efec7fef815e2c23d296756f31c7cdc03d # v1.0.0
+      - uses: oxc-project/setup-rust@1ff88fdaffd6ae35c0fb32ccc159340b37d0beac # v1.0.7
         with:
           cache-key: benchmark
           save-cache: ${{ github.ref_name == 'main' }}
@@ -39,7 +39,7 @@ jobs:
         run: cargo codspeed build -p fast-glob --features codspeed
 
       - name: Run benchmark
-        uses: CodSpeedHQ/action@653fdc30e6c40ffd9739e40c8a0576f4f4523ca1 # v4.0.1
+        uses: CodSpeedHQ/action@6b43a0cd438f6ca5ad26f9ed03ed159ed2df7da9 # v4.1.1
         timeout-minutes: 15
         with:
           run: cargo codspeed run

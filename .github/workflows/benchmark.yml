@@ -41,7 +41,7 @@ jobs:
         run: cargo codspeed build -p fast-glob --features codspeed
 
       - name: Run benchmark
-        uses: CodSpeedHQ/action@dbda7111f8ac363564b0c51b992d4ce76bb89f2f # v4.5.2
+        uses: CodSpeedHQ/action@0700edb451d0e9f2426f99bd6977027e550fb2a6 # v4.7.0
         timeout-minutes: 15
         with:
           run: cargo codspeed run

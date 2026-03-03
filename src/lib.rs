@@ -183,7 +183,10 @@ impl State {
         branch_index: usize,
         brace_stack: &mut BraceStack,
     ) -> bool {
-        brace_stack.push((open_brace_index as u32, branch_index as u32));
+        // Gracefully reject brace expansions deeper than BraceStack capacity.
+        if brace_stack.try_push((open_brace_index as u32, branch_index as u32)).is_err() {
+            return false;
+        }
 
         let mut branch_state = self.clone();
         branch_state.glob_index = branch_index;

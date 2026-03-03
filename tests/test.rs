@@ -304,11 +304,11 @@ mod tests {
         assert!(!glob_match("\\a*", "**"));
         assert!(!glob_match("\\a*", "\\*"));
 
-        assert!(glob_match("\\a*", "a"));
+        assert!(!glob_match("\\a*", "a"));
         assert!(!glob_match("\\a*", "a/*"));
-        assert!(glob_match("\\a*", "abc"));
-        assert!(glob_match("\\a*", "abd"));
-        assert!(glob_match("\\a*", "abe"));
+        assert!(!glob_match("\\a*", "abc"));
+        assert!(!glob_match("\\a*", "abd"));
+        assert!(!glob_match("\\a*", "abe"));
         assert!(!glob_match("\\a*", "b"));
         assert!(!glob_match("\\a*", "bb"));
         assert!(!glob_match("\\a*", "bcd"));

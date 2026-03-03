@@ -98,7 +98,7 @@ fn unescape(c: &mut u8, glob: &[u8], state: &mut State) -> bool {
             return false;
         }
         *c = match glob[state.glob_index] {
-            b'a' => b'\x61',
+            b'a' => b'\x07',
             b'b' => b'\x08',
             b'n' => b'\n',
             b'r' => b'\r',

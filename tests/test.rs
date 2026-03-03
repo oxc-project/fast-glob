@@ -1689,6 +1689,41 @@ mod tests {
     fn not_paired_braces() {
         assert!(!glob_match("{a,}}", "a"));
         assert!(glob_match("{a,}}", "a}"));
+        assert!(!glob_match("{a,b", "a"));
+        assert!(!glob_match("{a,b", "b"));
+        assert!(!glob_match("!{a,b", "a"));
+        assert!(!glob_match("!{a,b", "zzz"));
+    }
+
+    #[test]
+    fn brace_depth_limits() {
+        fn nested_braces(depth: usize, negated: bool) -> String {
+            let mut pattern = String::new();
+            if negated {
+                pattern.push('!');
+            }
+            for _ in 0..depth {
+                pattern.push('{');
+            }
+            pattern.push_str("a,b");
+            for _ in 0..depth {
+                pattern.push('}');
+            }
+            pattern
+        }
+
+        let depth_10 = nested_braces(10, false);
+        assert!(glob_match(&depth_10, "a"));
+        assert!(glob_match(&depth_10, "b"));
+        assert!(!glob_match(&depth_10, "zzz"));
+
+        let depth_11 = nested_braces(11, false);
+        assert!(!glob_match(&depth_11, "a"));
+        assert!(!glob_match(&depth_11, "zzz"));
+
+        let negated_depth_11 = nested_braces(11, true);
+        assert!(!glob_match(&negated_depth_11, "a"));
+        assert!(!glob_match(&negated_depth_11, "zzz"));
     }
 
     #[test]

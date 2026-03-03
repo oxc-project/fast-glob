@@ -85,7 +85,11 @@ fn glob_match_impl(glob: &[u8], path: &[u8]) -> bool {
     }
 
     let mut brace_stack = ArrayVec::<_, 10>::new();
-    let matched = state.glob_match_from(glob, path, 0, &mut brace_stack);
+    let mut invalid_pattern = false;
+    let matched = state.glob_match_from(glob, path, 0, &mut brace_stack, &mut invalid_pattern);
+    if invalid_pattern {
+        return false;
+    }
 
     negated ^ matched
 }
@@ -182,9 +186,11 @@ impl State {
         open_brace_index: usize,
         branch_index: usize,
         brace_stack: &mut BraceStack,
+        invalid_pattern: &mut bool,
     ) -> bool {
         // Gracefully reject brace expansions deeper than BraceStack capacity.
         if brace_stack.try_push((open_brace_index as u32, branch_index as u32)).is_err() {
+            *invalid_pattern = true;
             return false;
         }
 
@@ -192,16 +198,25 @@ impl State {
         branch_state.glob_index = branch_index;
         branch_state.brace_depth = brace_stack.len();
 
-        let matched = branch_state.glob_match_from(glob, path, branch_index, brace_stack);
+        let matched =
+            branch_state.glob_match_from(glob, path, branch_index, brace_stack, invalid_pattern);
 
         brace_stack.pop();
 
         matched
     }
 
-    fn match_brace(&mut self, glob: &[u8], path: &[u8], brace_stack: &mut BraceStack) -> bool {
+    fn match_brace(
+        &mut self,
+        glob: &[u8],
+        path: &[u8],
+        brace_stack: &mut BraceStack,
+        invalid_pattern: &mut bool,
+    ) -> bool {
         let mut brace_depth = 0;
         let mut in_brackets = false;
+        let mut has_closing_brace = false;
+        let mut matched = false;
 
         let open_brace_index = self.glob_index;
 
@@ -218,14 +233,16 @@ impl State {
                 b'}' if !in_brackets => {
                     brace_depth -= 1;
                     if brace_depth == 0 {
+                        has_closing_brace = true;
                         if self.match_brace_branch(
                             glob,
                             path,
                             open_brace_index,
                             branch_index,
                             brace_stack,
+                            invalid_pattern,
                         ) {
-                            return true;
+                            matched = true;
                         }
                         break;
                     }
@@ -237,8 +254,9 @@ impl State {
                         open_brace_index,
                         branch_index,
                         brace_stack,
+                        invalid_pattern,
                     ) {
-                        return true;
+                        matched = true;
                     }
                     branch_index = self.glob_index + 1;
                 }
@@ -250,7 +268,12 @@ impl State {
             self.glob_index += 1;
         }
 
-        false
+        if !has_closing_brace {
+            *invalid_pattern = true;
+            return false;
+        }
+
+        matched
     }
 
     #[inline(always)]
@@ -260,6 +283,7 @@ impl State {
         path: &[u8],
         match_start: usize,
         brace_stack: &mut BraceStack,
+        invalid_pattern: &mut bool,
     ) -> bool {
         while self.glob_index < glob.len() || self.path_index < path.len() {
             if self.glob_index < glob.len() {
@@ -380,7 +404,7 @@ impl State {
                             self.brace_depth += 1;
                             continue;
                         }
-                        return self.match_brace(glob, path, brace_stack);
+                        return self.match_brace(glob, path, brace_stack, invalid_pattern);
                     }
                     b',' | b'}' if self.brace_depth > 0 => {
                         self.skip_branch(glob);

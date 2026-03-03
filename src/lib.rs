@@ -184,10 +184,7 @@ impl State {
         brace_stack: &mut BraceStack,
     ) -> bool {
         // Gracefully reject brace expansions deeper than BraceStack capacity.
-        if brace_stack
-            .try_push((open_brace_index as u32, branch_index as u32))
-            .is_err()
-        {
+        if brace_stack.try_push((open_brace_index as u32, branch_index as u32)).is_err() {
             return false;
         }
 

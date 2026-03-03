@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1](https://github.com/oxc-project/fast-glob/compare/v1.0.0...v1.0.1) - 2026-03-03
+
+### Fixed
+
+- treat malformed brace patterns as invalid ([#100](https://github.com/oxc-project/fast-glob/pull/100))
+- avoid panic on deep brace nesting ([#99](https://github.com/oxc-project/fast-glob/pull/99))
+- map `\a` escape sequence to BEL character (`\x07`) ([#98](https://github.com/oxc-project/fast-glob/pull/98))
+
+### Other
+
+- update crate docs repository link ([#101](https://github.com/oxc-project/fast-glob/pull/101))
+- keep \a escaped as literal a
+- *(deps)* lock file maintenance ([#60](https://github.com/oxc-project/fast-glob/pull/60))
+- *(deps)* lock file maintenance ([#51](https://github.com/oxc-project/fast-glob/pull/51))
+
 ## [1.0.0](https://github.com/oxc-project/fast-glob/compare/v0.4.5...v1.0.0) - 2025-07-27
 
 ### Other

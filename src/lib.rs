@@ -36,7 +36,7 @@
 //!
 //! For detailed usage and API reference, refer to the specific function and struct documentation.
 //!
-//! For any issues or contributions, please visit the [GitHub repository](https://github.com/shulaoda/fast-glob).
+//! For any issues or contributions, please visit the [GitHub repository](https://github.com/oxc-project/fast-glob).
 
 /**
  * The following code is modified based on

@@ -329,12 +329,12 @@ impl State {
 
                         continue;
                     }
-                    b'?' if self.path_index < path.len() => {
-                        if !is_separator(path[self.path_index] as char) {
-                            self.glob_index += 1;
-                            self.path_index += 1;
-                            continue;
-                        }
+                    b'?' if self.path_index < path.len()
+                        && !is_separator(path[self.path_index] as char) =>
+                    {
+                        self.glob_index += 1;
+                        self.path_index += 1;
+                        continue;
                     }
                     b'[' if self.path_index < path.len() => {
                         self.glob_index += 1;

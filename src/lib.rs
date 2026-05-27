@@ -46,9 +46,19 @@
  * Copyright (c) 2023 Devon Govett
  * https://github.com/devongovett/glob-match/tree/main/LICENSE
  */
-use std::path::is_separator;
-
 use arrayvec::ArrayVec;
+
+#[inline(always)]
+fn is_separator(c: u8) -> bool {
+    #[cfg(windows)]
+    {
+        c == b'/' || c == b'\\'
+    }
+    #[cfg(not(windows))]
+    {
+        c == b'/'
+    }
+}
 
 #[derive(Clone, Debug, Default)]
 struct State {
@@ -144,7 +154,7 @@ impl State {
         }
 
         let mut path_index = self.path_index;
-        while path_index < path.len() && !is_separator(path[path_index] as char) {
+        while path_index < path.len() && !is_separator(path[path_index]) {
             path_index += 1;
         }
 
@@ -276,7 +286,6 @@ impl State {
         matched
     }
 
-    #[inline(always)]
     fn glob_match_from(
         &mut self,
         glob: &[u8],
@@ -285,12 +294,17 @@ impl State {
         brace_stack: &mut BraceStack,
         invalid_pattern: &mut bool,
     ) -> bool {
-        while self.glob_index < glob.len() || self.path_index < path.len() {
-            if self.glob_index < glob.len() {
-                match glob[self.glob_index] {
+        let glob_len = glob.len();
+        let path_len = path.len();
+
+        while self.glob_index < glob_len || self.path_index < path_len {
+            if self.glob_index < glob_len {
+                // SAFETY: We just checked `self.glob_index < glob_len`.
+                let gc = unsafe { *glob.get_unchecked(self.glob_index) };
+                match gc {
                     b'*' => {
-                        let is_globstar =
-                            self.glob_index + 1 < glob.len() && glob[self.glob_index + 1] == b'*';
+                        let is_globstar = self.glob_index + 1 < glob_len
+                            && unsafe { *glob.get_unchecked(self.glob_index + 1) } == b'*';
                         if is_globstar {
                             self.skip_globstars(glob);
                         }
@@ -303,12 +317,14 @@ impl State {
                         if is_globstar {
                             self.glob_index += 2;
 
-                            let is_end_invalid = self.glob_index != glob.len();
+                            let is_end_invalid = self.glob_index != glob_len;
 
-                            if (self.glob_index.saturating_sub(match_start) < 3
-                                || glob[self.glob_index - 3] == b'/')
-                                && (!is_end_invalid || glob[self.glob_index] == b'/')
-                            {
+                            let prefix_ok = self.glob_index < match_start + 3
+                                || unsafe { *glob.get_unchecked(self.glob_index - 3) } == b'/';
+                            let suffix_ok = !is_end_invalid
+                                || unsafe { *glob.get_unchecked(self.glob_index) } == b'/';
+
+                            if prefix_ok && suffix_ok {
                                 if is_end_invalid {
                                     self.glob_index += 1;
                                 }
@@ -321,27 +337,30 @@ impl State {
                         }
 
                         if !in_globstar
-                            && self.path_index < path.len()
-                            && is_separator(path[self.path_index] as char)
+                            && self.path_index < path_len
+                            && is_separator(unsafe { *path.get_unchecked(self.path_index) })
                         {
                             self.wildcard = self.globstar;
                         }
 
                         continue;
                     }
-                    b'?' if self.path_index < path.len()
-                        && !is_separator(path[self.path_index] as char) =>
+                    b'?' if self.path_index < path_len
+                        && !is_separator(unsafe { *path.get_unchecked(self.path_index) }) =>
                     {
                         self.glob_index += 1;
                         self.path_index += 1;
                         continue;
                     }
-                    b'[' if self.path_index < path.len() => {
+                    b'[' if self.path_index < path_len => {
                         self.glob_index += 1;
 
                         let mut negated = false;
-                        if self.glob_index < glob.len()
-                            && matches!(glob[self.glob_index], b'^' | b'!')
+                        if self.glob_index < glob_len
+                            && matches!(
+                                unsafe { *glob.get_unchecked(self.glob_index) },
+                                b'^' | b'!'
+                            )
                         {
                             negated = true;
                             self.glob_index += 1;
@@ -349,24 +368,24 @@ impl State {
 
                         let mut first = true;
                         let mut is_match = false;
-                        let c = path[self.path_index];
-                        while self.glob_index < glob.len()
-                            && (first || glob[self.glob_index] != b']')
+                        let c = unsafe { *path.get_unchecked(self.path_index) };
+                        while self.glob_index < glob_len
+                            && (first || unsafe { *glob.get_unchecked(self.glob_index) } != b']')
                         {
-                            let mut low = glob[self.glob_index];
+                            let mut low = unsafe { *glob.get_unchecked(self.glob_index) };
                             if !unescape(&mut low, glob, self) {
                                 return false;
                             }
 
                             self.glob_index += 1;
 
-                            let high = if self.glob_index + 1 < glob.len()
-                                && glob[self.glob_index] == b'-'
-                                && glob[self.glob_index + 1] != b']'
+                            let high = if self.glob_index + 1 < glob_len
+                                && unsafe { *glob.get_unchecked(self.glob_index) } == b'-'
+                                && unsafe { *glob.get_unchecked(self.glob_index + 1) } != b']'
                             {
                                 self.glob_index += 1;
 
-                                let mut high = glob[self.glob_index];
+                                let mut high = unsafe { *glob.get_unchecked(self.glob_index) };
                                 if !unescape(&mut high, glob, self) {
                                     return false;
                                 }
@@ -384,7 +403,7 @@ impl State {
                             first = false;
                         }
 
-                        if self.glob_index >= glob.len() {
+                        if self.glob_index >= glob_len {
                             return false;
                         }
 
@@ -395,10 +414,10 @@ impl State {
                         }
                     }
                     b'{' => {
-                        if let Some((_, branch_index)) =
-                            brace_stack.iter().find(|(open_brace_index, _)| {
-                                *open_brace_index == self.glob_index as u32
-                            })
+                        let target = self.glob_index as u32;
+                        if let Some((_, branch_index)) = brace_stack
+                            .iter()
+                            .find(|(open_brace_index, _)| *open_brace_index == target)
                         {
                             self.glob_index = *branch_index as usize;
                             self.brace_depth += 1;
@@ -410,16 +429,13 @@ impl State {
                         self.skip_branch(glob);
                         continue;
                     }
-                    mut c if self.path_index < path.len() => {
+                    mut c if self.path_index < path_len => {
                         if !unescape(&mut c, glob, self) {
                             return false;
                         }
 
-                        let is_match = if c == b'/' {
-                            is_separator(path[self.path_index] as char)
-                        } else {
-                            path[self.path_index] == c
-                        };
+                        let pc = unsafe { *path.get_unchecked(self.path_index) };
+                        let is_match = if c == b'/' { is_separator(pc) } else { pc == c };
 
                         if is_match {
                             self.glob_index += 1;
@@ -436,7 +452,7 @@ impl State {
                 }
             }
 
-            if self.wildcard.path_index > 0 && self.wildcard.path_index <= path.len() as u32 {
+            if self.wildcard.path_index > 0 && self.wildcard.path_index <= path_len as u32 {
                 self.backtrack();
                 continue;
             }

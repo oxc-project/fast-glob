@@ -48,6 +48,14 @@
  */
 use arrayvec::ArrayVec;
 
+/// Whether `c` is safe to use as a literal anchor character when fast-
+/// forwarding the path after `**`. Any of the glob metacharacters could
+/// expand to something other than this single byte, so they aren't safe.
+#[inline(always)]
+fn is_literal_anchor(c: u8) -> bool {
+    !matches!(c, b'*' | b'?' | b'[' | b'{' | b'\\' | b',' | b'}' | b'/')
+}
+
 #[inline(always)]
 fn is_separator(c: u8) -> bool {
     #[cfg(windows)]
@@ -163,6 +171,61 @@ impl State {
         }
 
         self.wildcard.path_index = path_index as u32;
+        self.globstar = self.wildcard;
+    }
+
+    /// Skip ahead past zero or more path segments to find the next position
+    /// where the literal `anchor` appears right after a separator (or at the
+    /// current position). This collapses what would otherwise be N rounds of
+    /// `**` backtracking — for `**/n*d`, instead of trying `n` at every
+    /// `/`-anchored position by re-entering the wildcard arm, jump directly
+    /// to the next plausible position in one pass.
+    ///
+    /// `wildcard.path_index` is then set to the next backtrack candidate
+    /// (past the next separator after the match, or past end), so that on
+    /// failure the next round of `**` matching resumes from a different
+    /// segment — matching the semantics of repeated `skip_to_separator`.
+    #[inline(always)]
+    fn skip_to_anchor(&mut self, path: &[u8], anchor: u8, is_end_invalid: bool) {
+        let path_len = path.len();
+        let mut p = self.path_index;
+        let mut found_pos: Option<usize> = None;
+
+        // Check current position first — `**` may match zero chars.
+        if p < path_len && unsafe { *path.get_unchecked(p) } == anchor {
+            found_pos = Some(p);
+            p += 1;
+        } else {
+            loop {
+                while p < path_len && !is_separator(unsafe { *path.get_unchecked(p) }) {
+                    p += 1;
+                }
+                if p >= path_len {
+                    break;
+                }
+                p += 1;
+                if p < path_len && unsafe { *path.get_unchecked(p) } == anchor {
+                    found_pos = Some(p);
+                    p += 1;
+                    break;
+                }
+            }
+        }
+
+        // From wherever we ended up (past the matched anchor, or end), find
+        // the next separator and set wildcard.path_index = past it. This is
+        // the same convention used by `skip_to_separator`.
+        while p < path_len && !is_separator(unsafe { *path.get_unchecked(p) }) {
+            p += 1;
+        }
+        if p < path_len || is_end_invalid {
+            p += 1;
+        }
+
+        if let Some(matched) = found_pos {
+            self.path_index = matched;
+        }
+        self.wildcard.path_index = p as u32;
         self.globstar = self.wildcard;
     }
 
@@ -329,7 +392,26 @@ impl State {
                                     self.glob_index += 1;
                                 }
 
-                                self.skip_to_separator(path, is_end_invalid);
+                                // If the char immediately after `**/` is a plain
+                                // literal, search for the next `/<literal>` in the
+                                // path directly. This collapses the otherwise
+                                // O(segments) backtracking loop into one pass.
+                                let anchor_byte = if self.glob_index < glob_len {
+                                    let next = unsafe { *glob.get_unchecked(self.glob_index) };
+                                    if is_literal_anchor(next) {
+                                        Some(next)
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                };
+
+                                if let Some(anchor) = anchor_byte {
+                                    self.skip_to_anchor(path, anchor, is_end_invalid);
+                                } else {
+                                    self.skip_to_separator(path, is_end_invalid);
+                                }
                                 in_globstar = true;
                             }
                         } else {

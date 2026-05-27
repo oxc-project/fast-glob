@@ -174,6 +174,32 @@ impl State {
         self.globstar = self.wildcard;
     }
 
+    /// Find the next position in the current path segment where `anchor`
+    /// appears. Collapses the per-byte backtracking of `*x` patterns into a
+    /// single scan. Mirrors the original semantics: a non-globstar `*` does
+    /// not extend past a separator, so on a separator we fall back to the
+    /// outer globstar (if any).
+    #[inline(always)]
+    fn skip_to_anchor_in_segment(&mut self, path: &[u8], anchor: u8) {
+        let path_len = path.len();
+        let mut p = self.path_index;
+        while p < path_len {
+            let c = unsafe { *path.get_unchecked(p) };
+            if is_separator(c) {
+                self.wildcard = self.globstar;
+                return;
+            }
+            if c == anchor {
+                self.path_index = p;
+                self.wildcard.path_index = (p + 1) as u32;
+                return;
+            }
+            p += 1;
+        }
+        // Reached end without finding anchor in the segment.
+        self.wildcard.path_index = (path_len + 1) as u32;
+    }
+
     /// Skip ahead past zero or more path segments to find the next position
     /// where the literal `anchor` appears right after a separator (or at the
     /// current position). This collapses what would otherwise be N rounds of
@@ -393,12 +419,32 @@ impl State {
                                 }
 
                                 // If the char immediately after `**/` is a plain
-                                // literal, search for the next `/<literal>` in the
-                                // path directly. This collapses the otherwise
-                                // O(segments) backtracking loop into one pass.
+                                // literal — or a `{` whose currently-active brace
+                                // branch starts with a plain literal — search for
+                                // the next `/<literal>` in the path directly. This
+                                // collapses the otherwise O(segments) backtracking
+                                // loop into one pass.
                                 let anchor_byte = if self.glob_index < glob_len {
                                     let next = unsafe { *glob.get_unchecked(self.glob_index) };
-                                    if is_literal_anchor(next) {
+                                    if next == b'{' {
+                                        let target = self.glob_index as u32;
+                                        brace_stack
+                                            .iter()
+                                            .find(|(open, _)| *open == target)
+                                            .and_then(|(_, bi)| {
+                                                let i = *bi as usize;
+                                                if i < glob_len {
+                                                    let bc = unsafe { *glob.get_unchecked(i) };
+                                                    if is_literal_anchor(bc) {
+                                                        Some(bc)
+                                                    } else {
+                                                        None
+                                                    }
+                                                } else {
+                                                    None
+                                                }
+                                            })
+                                    } else if is_literal_anchor(next) {
                                         Some(next)
                                     } else {
                                         None
@@ -416,6 +462,17 @@ impl State {
                             }
                         } else {
                             self.glob_index += 1;
+
+                            // For a plain `*` followed by a literal anchor, scan
+                            // the current path segment for that anchor in one go
+                            // — saves the per-byte backtracking loop.
+                            if self.glob_index < glob_len {
+                                let next = unsafe { *glob.get_unchecked(self.glob_index) };
+                                if is_literal_anchor(next) {
+                                    self.skip_to_anchor_in_segment(path, next);
+                                    in_globstar = true;
+                                }
+                            }
                         }
 
                         if !in_globstar

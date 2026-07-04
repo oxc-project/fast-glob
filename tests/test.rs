@@ -1656,16 +1656,18 @@ mod tests {
         assert!(glob_match("{a,{d,e}b}/c", "a/c"));
         assert!(glob_match("{**/a,**/b}", "b"));
 
-        let patterns = ["{src,extensions}/**/test/**/{fixtures,browser,common}/**/*.{ts,js}",
-      "{extensions,src}/**/{media,images,icons}/**/*.{svg,png,gif,jpg}",
-      "{.github,build,test}/**/{workflows,azure-pipelines,integration,smoke}/**/*.{yml,yaml,json}",
-      "src/vs/{base,editor,platform,workbench}/test/{browser,common,node}/**/[a-z]*[tT]est.ts",
-      "src/vs/workbench/{contrib,services}/**/*{Editor,Workspace,Terminal}*.ts",
-      "{extensions,src}/**/{markdown,json,javascript,typescript}/**/*.{ts,json}",
-      "**/{electron-sandbox,electron-main,browser,node}/**/{*[sS]ervice*,*[cC]ontroller*}.ts",
-      "{src,extensions}/**/{common,browser,electron-sandbox}/**/*{[cC]ontribution,[sS]ervice}.ts",
-      "src/vs/{base,platform,workbench}/**/{test,browser}/**/*{[mM]odel,[cC]ontroller}*.ts",
-      "extensions/**/{browser,common,node}/{**/*[sS]ervice*,**/*[pP]rovider*}.ts"];
+        let patterns = [
+            "{src,extensions}/**/test/**/{fixtures,browser,common}/**/*.{ts,js}",
+            "{extensions,src}/**/{media,images,icons}/**/*.{svg,png,gif,jpg}",
+            "{.github,build,test}/**/{workflows,azure-pipelines,integration,smoke}/**/*.{yml,yaml,json}",
+            "src/vs/{base,editor,platform,workbench}/test/{browser,common,node}/**/[a-z]*[tT]est.ts",
+            "src/vs/workbench/{contrib,services}/**/*{Editor,Workspace,Terminal}*.ts",
+            "{extensions,src}/**/{markdown,json,javascript,typescript}/**/*.{ts,json}",
+            "**/{electron-sandbox,electron-main,browser,node}/**/{*[sS]ervice*,*[cC]ontroller*}.ts",
+            "{src,extensions}/**/{common,browser,electron-sandbox}/**/*{[cC]ontribution,[sS]ervice}.ts",
+            "src/vs/{base,platform,workbench}/**/{test,browser}/**/*{[mM]odel,[cC]ontroller}*.ts",
+            "extensions/**/{browser,common,node}/{**/*[sS]ervice*,**/*[pP]rovider*}.ts",
+        ];
 
         let input = std::fs::read_to_string("tests/fixtures/input.txt").unwrap();
 

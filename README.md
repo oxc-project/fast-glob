@@ -2,7 +2,7 @@
 
 ## Introduce
 
-A high-performance glob matching crate for Rust based on [`devongovett/glob-match`](https://github.com/devongovett/glob-match).
+A high-performance glob matching crate for Rust forked from [`devongovett/glob-match`](https://github.com/devongovett/glob-match).
 
 **Key Features:**
 

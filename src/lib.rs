@@ -39,7 +39,7 @@
 //! For any issues or contributions, please visit the [GitHub repository](https://github.com/oxc-project/fast-glob).
 
 /**
- * The following code is modified based on
+ * The following code was originally forked from
  * https://github.com/devongovett/glob-match/blob/d5a6c67/src/lib.rs
  *
  * MIT Licensed

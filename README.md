@@ -84,10 +84,10 @@ Due to these limitations, `brace expansion` requires a different implementation 
 
 - The [glob-match](https://github.com/devongovett/glob-match) project created by [@devongovett](https://github.com/devongovett) which is an extremely fast glob matching library in Rust.
 
-## ❤ Who's [Sponsoring Oxc](https://github.com/sponsors/Boshen)?
+# [Sponsored By](https://oxc.rs/sponsor)
 
 <p align="center">
-  <a href="https://github.com/sponsors/Boshen">
-    <img src="https://raw.githubusercontent.com/Boshen/sponsors/main/sponsors.svg" alt="Our sponsors" />
+  <a href="https://oxc.rs/sponsor">
+    <img src="https://raw.githubusercontent.com/oxc-project/sponsors/main/sponsors.svg" alt="Our sponsors" />
   </a>
 </p>

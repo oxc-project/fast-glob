@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0](https://github.com/oxc-project/fast-glob/compare/v1.0.1...v1.1.0) - 2026-07-21
+
+### Added
+
+- add `validate` API for reporting invalid patterns ([#153](https://github.com/oxc-project/fast-glob/pull/153))
+
+### Other
+
+- update sponsor section ([#151](https://github.com/oxc-project/fast-glob/pull/151))
+- mention glob-match fork ([#148](https://github.com/oxc-project/fast-glob/pull/148))
+- normalize README sponsor section ([#143](https://github.com/oxc-project/fast-glob/pull/143))
+- *(deps)* update dependency rust to v1.95.0 ([#112](https://github.com/oxc-project/fast-glob/pull/112))
+
 ### Added
 
 - `validate` function and `Error` type to reject invalid patterns (unclosed `{` or `[`, trailing `\`, too-deep brace nesting) with a descriptive error

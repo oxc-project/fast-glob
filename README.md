@@ -20,6 +20,26 @@ let path = "some/a/bigger/path/to/the/crazy/needle.txt";
 assert!(glob_match(glob, path));
 ```
 
+## Validation
+
+`glob_match` does not report invalid patterns. For example, an unclosed `{` or `[`, a trailing `\`, or brace expansions nested deeper than 10 levels have an unspecified result (typically no match).
+
+This is a deliberate performance trade-off: `fast-glob` has no compile step and interprets the pattern lazily while matching, so reliably detecting a malformed pattern would require an extra scan on every `glob_match` call.
+
+Validation is instead a separate, one-time step. Use `validate` to reject such patterns with a descriptive error, e.g. when accepting user-written patterns at configuration load time:
+
+```rust
+use fast_glob::{validate, Error, ErrorKind};
+
+assert!(validate("some/**/n*d[k-m]e?txt").is_ok());
+assert_eq!(
+    validate("src/**/*.{js,ts"),
+    Err(Error { kind: ErrorKind::UnclosedBrace, index: 9 })
+);
+```
+
+A pattern accepted by `validate` is guaranteed to be interpreted consistently by `glob_match`.
+
 ## Syntax
 
 | Syntax  | Meaning                                                                                                                                                                                             |

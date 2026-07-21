@@ -1715,17 +1715,80 @@ mod tests {
         }
 
         let depth_10 = nested_braces(10, false);
+        assert_eq!(validate(&depth_10), Ok(()));
         assert!(glob_match(&depth_10, "a"));
         assert!(glob_match(&depth_10, "b"));
         assert!(!glob_match(&depth_10, "zzz"));
 
         let depth_11 = nested_braces(11, false);
+        assert_eq!(
+            validate(&depth_11),
+            Err(Error { kind: ErrorKind::BraceNestingTooDeep, index: 10 })
+        );
         assert!(!glob_match(&depth_11, "a"));
         assert!(!glob_match(&depth_11, "zzz"));
 
         let negated_depth_11 = nested_braces(11, true);
         assert!(!glob_match(&negated_depth_11, "a"));
         assert!(!glob_match(&negated_depth_11, "zzz"));
+    }
+
+    #[test]
+    fn validate_patterns() {
+        assert_eq!(validate("some/**/n*d[k-m]e?txt"), Ok(()));
+        assert_eq!(validate("a/{b,c}/d"), Ok(()));
+        assert_eq!(validate("!negated/**"), Ok(()));
+        // Lone closers and commas are ordinary characters.
+        assert_eq!(validate("a}b]c,d"), Ok(()));
+        // A leading `]` is a literal member of a character class.
+        assert_eq!(validate("a[]]b"), Ok(()));
+        // Escaped special characters are ordinary characters.
+        assert_eq!(validate("a\\{b\\[c\\\\d"), Ok(()));
+
+        fn err(kind: ErrorKind, index: usize) -> Result<(), Error> {
+            Err(Error { kind, index })
+        }
+
+        assert_eq!(validate("src/**/*.{js,ts"), err(ErrorKind::UnclosedBrace, 9));
+        assert_eq!(validate("!src/**/*.{js,ts"), err(ErrorKind::UnclosedBrace, 10));
+        assert_eq!(validate("{a,{b,c}"), err(ErrorKind::UnclosedBrace, 0));
+        assert_eq!(validate("src/[abpp.js"), err(ErrorKind::UnclosedBracket, 4));
+        assert_eq!(validate("src/a[]pp.js"), err(ErrorKind::UnclosedBracket, 5));
+        assert_eq!(validate("src/app.js\\"), err(ErrorKind::TrailingBackslash, 10));
+    }
+
+    #[test]
+    fn invalid_patterns_do_not_match_through_negation() {
+        // An invalid pattern is rejected even when the glob is negated,
+        // instead of "matching everything".
+        assert!(!glob_match("src/[abpp.js", "src/app.js"));
+        assert!(!glob_match("!src/[abpp.js", "src/app.js"));
+        assert!(!glob_match("src/app.js\\", "src/app.js"));
+        assert!(!glob_match("!src/app.js\\", "src/app.js"));
+        assert!(!glob_match("src/**/*.{js,ts", "src/app.js"));
+        assert!(!glob_match("!src/**/*.{js,ts", "src/app.js"));
+
+        // Even when the invalid construct is never reached during matching
+        // (mismatch before it), the negation flip is gated on validity.
+        assert!(!glob_match("!src/[abpp.js", "docs/app.js"));
+        assert!(!glob_match("!xyz/*.{js,ts", "src/app.js"));
+        assert!(!glob_match("!abc\\", "xyz"));
+    }
+
+    #[test]
+    fn error_display() {
+        assert_eq!(
+            validate("src/**/*.{js,ts").unwrap_err().to_string(),
+            "unclosed brace expansion at byte 9; missing '}' (to match a literal '{', escape it as '\\{' or '[{]')"
+        );
+        assert_eq!(
+            validate("src/[abpp.js").unwrap_err().to_string(),
+            "unclosed character class at byte 4; missing ']' (to match a literal '[', escape it as '\\[' or '[[]')"
+        );
+        assert_eq!(
+            validate("src/app.js\\").unwrap_err().to_string(),
+            "trailing backslash at byte 10 has no character to escape (to match a literal '\\', use '\\\\')"
+        );
     }
 
     #[test]

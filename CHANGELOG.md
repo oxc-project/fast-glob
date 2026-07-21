@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `validate` function and `Error` type to reject invalid patterns (unclosed `{` or `[`, trailing `\`, too-deep brace nesting) with a descriptive error
+
+### Fixed
+
+- treat invalid patterns as non-matching under `!` negation, so negated globs like `!src/[abpp.js` no longer match everything
+- interpret character classes consistently between brace-branch scanning and matching (e.g. a `,` or `}` inside `[...]` inside braces is a class member, not a branch separator)
+- document that the result of `glob_match` for an invalid pattern is unspecified
+
 ## [1.0.1](https://github.com/oxc-project/fast-glob/compare/v1.0.0...v1.0.1) - 2026-03-03
 
 ### Fixed

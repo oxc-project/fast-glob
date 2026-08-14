@@ -33,3 +33,9 @@ wax = "0.6.0"
 [features]
 default = []
 codspeed = ["criterion2/codspeed"]
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false

@@ -1387,7 +1387,7 @@ mod tests {
 
         assert!(!glob_match("!.md", ".md"));
         assert!(glob_match("!**/*.md", "a.js"));
-        // assert!(!glob_match("!**/*.md", "b.md"));
+        assert!(!glob_match("!**/*.md", "b.md"));
         assert!(glob_match("!**/*.md", "c.txt"));
         assert!(glob_match("!*.md", "a.js"));
         assert!(!glob_match("!*.md", "b.md"));
@@ -1419,9 +1419,9 @@ mod tests {
         assert!(glob_match("!*.md", "a.js"));
         assert!(glob_match("!*.md", "b.txt"));
         assert!(!glob_match("!*.md", "c.md"));
-        // assert!(!glob_match("!**/a.js", "a/a/a.js"));
-        // assert!(!glob_match("!**/a.js", "a/b/a.js"));
-        // assert!(!glob_match("!**/a.js", "a/c/a.js"));
+        assert!(!glob_match("!**/a.js", "a/a/a.js"));
+        assert!(!glob_match("!**/a.js", "a/b/a.js"));
+        assert!(!glob_match("!**/a.js", "a/c/a.js"));
         assert!(glob_match("!**/a.js", "a/a/b.js"));
         assert!(!glob_match("!a/**/a.js", "a/a/a/a.js"));
         assert!(glob_match("!a/**/a.js", "b/a/b/a.js"));
@@ -1429,7 +1429,7 @@ mod tests {
         assert!(glob_match("!**/*.md", "a/b.js"));
         assert!(glob_match("!**/*.md", "a.js"));
         assert!(!glob_match("!**/*.md", "a/b.md"));
-        // assert!(!glob_match("!**/*.md", "a.md"));
+        assert!(!glob_match("!**/*.md", "a.md"));
         assert!(!glob_match("**/*.md", "a/b.js"));
         assert!(!glob_match("**/*.md", "a.js"));
         assert!(glob_match("**/*.md", "a/b.md"));
@@ -1437,13 +1437,13 @@ mod tests {
         assert!(glob_match("!**/*.md", "a/b.js"));
         assert!(glob_match("!**/*.md", "a.js"));
         assert!(!glob_match("!**/*.md", "a/b.md"));
-        // assert!(!glob_match("!**/*.md", "a.md"));
+        assert!(!glob_match("!**/*.md", "a.md"));
         assert!(glob_match("!*.md", "a/b.js"));
         assert!(glob_match("!*.md", "a.js"));
         assert!(glob_match("!*.md", "a/b.md"));
         assert!(!glob_match("!*.md", "a.md"));
         assert!(glob_match("!**/*.md", "a.js"));
-        // assert!(!glob_match("!**/*.md", "b.md"));
+        assert!(!glob_match("!**/*.md", "b.md"));
         assert!(glob_match("!**/*.md", "c.txt"));
     }
 
@@ -1798,5 +1798,13 @@ mod tests {
         assert!(!glob_match(s, s));
         let s = "**** *{*{??*{??***\u{5} *{*{??*{??***\u{5},\0U\0}]*****\u{1},\0***\0,\0\0}w****,\0U\0}]*****\u{1},\0***\0,\0\0}w*****\u{1}***{}*.*\0\0*\0";
         assert!(!glob_match(s, s));
+    }
+
+    #[test]
+    fn negated_globstar() {
+        assert!(glob_match("**", "a/b"));
+        assert!(!glob_match("!**", "a/b"));
+        assert!(glob_match("!!**", "a/b"));
+        assert!(!glob_match("!!!**", "a/b"));
     }
 }

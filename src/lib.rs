@@ -235,7 +235,9 @@ fn glob_match_internal(glob: &[u8], path: &[u8]) -> (bool, bool) {
 
     let mut brace_stack = BraceStack::new();
     let mut invalid_pattern = false;
-    let matched = state.glob_match_from(glob, path, 0, &mut brace_stack, &mut invalid_pattern);
+    let match_start = state.glob_index;
+    let matched =
+        state.glob_match_from(glob, path, match_start, &mut brace_stack, &mut invalid_pattern);
 
     // A negated glob matches every path its pattern does not — for an invalid
     // pattern that would be every path, even when the matcher never reaches

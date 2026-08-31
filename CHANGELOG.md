@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1](https://github.com/oxc-project/fast-glob/compare/v1.1.0...v1.1.1) - 2026-08-31
+
+### Fixed
+
+- apply the negation offset to the globstar segment check ([#171](https://github.com/oxc-project/fast-glob/pull/171))
+
+### Other
+
+- reduce Rust dev debug info ([#162](https://github.com/oxc-project/fast-glob/pull/162))
+
 ## [1.1.0](https://github.com/oxc-project/fast-glob/compare/v1.0.1...v1.1.0) - 2026-07-21
 
 ### Added

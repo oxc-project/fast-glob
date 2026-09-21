@@ -21,8 +21,8 @@
 //! ## Validation
 //!
 //! [`glob_match`] does not report invalid patterns — an unclosed `{` or `[`,
-//! a trailing `\`, or brace expansions nested deeper than 10 levels have an
-//! unspecified result (typically no match). This is a deliberate performance
+//! a trailing `\`, more than 10 brace groups, or brace expansions nested deeper
+//! than 10 levels have an unspecified result (typically no match). This is a deliberate performance
 //! trade-off: there is no compile step, and the pattern is interpreted lazily
 //! while matching, so reliably detecting a malformed pattern would require an
 //! extra scan on every call. Validation is instead a separate, one-time step —
@@ -48,7 +48,7 @@
 //! | `*`     | Matches zero or more characters, except for path separators (e.g., `/`).                                                                                                                             |
 //! | `**`    | Matches zero or more characters, including path separators. Must match a complete path segment (i.e., followed by a `/` or the end of the pattern).                                                  |
 //! | `[ab]`  | Matches one of the characters contained in the brackets. Character ranges, e.g., `[a-z]`, are also supported. Use `[!ab]` or `[^ab]` to match any character _except_ those contained in the brackets. |
-//! | `{a,b}` | Matches one of the patterns contained in the braces. Any of the wildcard characters can be used in the sub-patterns. Braces may be nested up to 10 levels deep.                                     |
+//! | `{a,b}` | Matches one of the patterns contained in the braces. Any of the wildcard characters can be used in the sub-patterns. Patterns may contain up to 10 brace groups, nested up to 10 levels deep.        |
 //! | `!`     | When at the start of the glob, this negates the result. Multiple `!` characters negate the glob multiple times.                                                                                     |
 //! | `\`     | A backslash character may be used to escape any of the above special characters.                                                                                                                    |
 //!
@@ -72,6 +72,7 @@ use std::path::is_separator;
 use arrayvec::ArrayVec;
 
 const MAX_BRACE_NESTING: usize = 10;
+const MAX_BRACE_GROUPS: usize = 10;
 
 #[derive(Clone, Debug, Default)]
 struct State {
@@ -90,7 +91,7 @@ struct Wildcard {
     brace_depth: u32,
 }
 
-type BraceStack = ArrayVec<(u32, u32), MAX_BRACE_NESTING>;
+type BraceStack = ArrayVec<(u32, u32), MAX_BRACE_GROUPS>;
 
 /// An error describing why a glob pattern is invalid, returned by [`validate`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,6 +114,8 @@ pub enum ErrorKind {
     TrailingBackslash,
     /// Brace expansions nest deeper than the supported 10 levels.
     BraceNestingTooDeep,
+    /// A pattern contains more than the supported 10 brace groups.
+    TooManyBraceGroups,
 }
 
 impl fmt::Display for Error {
@@ -135,6 +138,10 @@ impl fmt::Display for Error {
                 f,
                 "brace expansion at byte {index} nests deeper than the supported {MAX_BRACE_NESTING} levels"
             ),
+            ErrorKind::TooManyBraceGroups => write!(
+                f,
+                "brace expansion at byte {index} exceeds the supported limit of {MAX_BRACE_GROUPS} groups"
+            ),
         }
     }
 }
@@ -144,11 +151,12 @@ impl std::error::Error for Error {}
 /// Performs glob pattern matching for `glob` against `path`.
 ///
 /// `glob` is expected to be a valid pattern. An invalid pattern — an unclosed
-/// `{` or `[`, a trailing `\`, or brace expansions nested deeper than 10
-/// levels — cannot be reported here and its result is unspecified: typically
-/// it matches nothing, and it never matches through `!` negation, but the
-/// exact behavior may change between releases. Callers accepting user-written
-/// patterns should reject invalid ones up front with [`validate`].
+/// `{` or `[`, a trailing `\`, more than 10 brace groups, or brace expansions
+/// nested deeper than 10 levels — cannot be reported here and its result is
+/// unspecified: typically it matches nothing, and it never matches through
+/// `!` negation, but the exact behavior may change between releases. Callers
+/// accepting user-written patterns should reject invalid ones up front with
+/// [`validate`].
 pub fn glob_match(glob: impl AsRef<[u8]>, path: impl AsRef<[u8]>) -> bool {
     let (matched, invalid_pattern) = glob_match_internal(glob.as_ref(), path.as_ref());
     matched && !invalid_pattern
@@ -186,6 +194,7 @@ pub fn validate(glob: impl AsRef<[u8]>) -> Result<(), Error> {
     }
 
     let mut open_braces = ArrayVec::<usize, MAX_BRACE_NESTING>::new();
+    let mut brace_groups = 0;
 
     while index < glob.len() {
         match glob[index] {
@@ -202,6 +211,10 @@ pub fn validate(glob: impl AsRef<[u8]>) -> Result<(), Error> {
             b'{' => {
                 if open_braces.try_push(index).is_err() {
                     return Err(Error { kind: ErrorKind::BraceNestingTooDeep, index });
+                }
+                brace_groups += 1;
+                if brace_groups > MAX_BRACE_GROUPS {
+                    return Err(Error { kind: ErrorKind::TooManyBraceGroups, index });
                 }
                 index += 1;
             }
@@ -371,7 +384,7 @@ impl State {
         brace_stack: &mut BraceStack,
         invalid_pattern: &mut bool,
     ) -> bool {
-        // Gracefully reject brace expansions deeper than BraceStack capacity.
+        // Gracefully reject patterns with more groups than BraceStack capacity.
         if brace_stack.try_push((open_brace_index as u32, branch_index as u32)).is_err() {
             *invalid_pattern = true;
             return false;

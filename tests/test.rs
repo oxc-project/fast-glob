@@ -1750,6 +1750,33 @@ mod tests {
     }
 
     #[test]
+    fn brace_group_limits() {
+        let groups_10 = "{a,b}".repeat(10);
+        assert_eq!(validate(&groups_10), Ok(()));
+        assert!(glob_match(&groups_10, "aaaaaaaaaa"));
+        assert!(glob_match(&groups_10, "bbbbbbbbbb"));
+
+        let mut groups_10_with_literal_braces = groups_10.clone();
+        groups_10_with_literal_braces.push_str("\\{[{}]");
+        assert_eq!(validate(&groups_10_with_literal_braces), Ok(()));
+
+        let groups_11 = "{a,b}".repeat(11);
+        assert_eq!(
+            validate(&groups_11),
+            Err(Error { kind: ErrorKind::TooManyBraceGroups, index: 50 })
+        );
+        assert!(!glob_match(&groups_11, "aaaaaaaaaaa"));
+
+        let negated_groups_11 = format!("!{groups_11}");
+        assert_eq!(
+            validate(&negated_groups_11),
+            Err(Error { kind: ErrorKind::TooManyBraceGroups, index: 51 })
+        );
+        assert!(!glob_match(&negated_groups_11, "aaaaaaaaaaa"));
+        assert!(!glob_match(&negated_groups_11, "zzz"));
+    }
+
+    #[test]
     fn validate_patterns() {
         assert_eq!(validate("some/**/n*d[k-m]e?txt"), Ok(()));
         assert_eq!(validate("a/{b,c}/d"), Ok(()));
@@ -1804,6 +1831,11 @@ mod tests {
         assert_eq!(
             validate("src/app.js\\").unwrap_err().to_string(),
             "trailing backslash at byte 10 has no character to escape (to match a literal '\\', use '\\\\')"
+        );
+        let groups_11 = "{a,b}".repeat(11);
+        assert_eq!(
+            validate(&groups_11).unwrap_err().to_string(),
+            "brace expansion at byte 50 exceeds the supported limit of 10 groups"
         );
     }
 

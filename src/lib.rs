@@ -375,6 +375,13 @@ impl State {
         }
     }
 
+    #[inline(always)]
+    fn skip_branch_ends(&mut self, glob: &[u8]) {
+        while self.brace_depth > 0 && matches!(glob.get(self.glob_index), Some(b',' | b'}')) {
+            self.skip_branch(glob);
+        }
+    }
+
     fn match_brace_branch(
         &self,
         glob: &[u8],
@@ -504,12 +511,22 @@ impl State {
                         if is_globstar {
                             self.glob_index += 2;
 
-                            let is_end_invalid = self.glob_index != glob.len();
+                            // A selected brace branch ends at `,` or `}`, but
+                            // brace expansion makes the suffix after the group
+                            // logically adjacent to this branch. Resolve those
+                            // boundaries before deciding whether `**` occupies
+                            // a complete path segment.
+                            let mut after_globstar = self.clone();
+                            after_globstar.skip_branch_ends(glob);
+                            let is_end_invalid = after_globstar.glob_index < glob.len();
 
                             if (self.glob_index.saturating_sub(match_start) < 3
                                 || glob[self.glob_index - 3] == b'/')
-                                && (!is_end_invalid || glob[self.glob_index] == b'/')
+                                && (after_globstar.glob_index >= glob.len()
+                                    || glob[after_globstar.glob_index] == b'/')
                             {
+                                self.glob_index = after_globstar.glob_index;
+                                self.brace_depth = after_globstar.brace_depth;
                                 if is_end_invalid {
                                     self.glob_index += 1;
                                 }

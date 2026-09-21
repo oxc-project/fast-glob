@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2](https://github.com/oxc-project/fast-glob/compare/v1.1.1...v1.1.2) - 2026-09-21
+
+### Fixed
+
+- recognize globstars in brace branches ([#181](https://github.com/oxc-project/fast-glob/pull/181))
+- keep character classes within path segments ([#179](https://github.com/oxc-project/fast-glob/pull/179))
+- validate the brace group limit ([#178](https://github.com/oxc-project/fast-glob/pull/178))
+- track syntactic brace depth ([#177](https://github.com/oxc-project/fast-glob/pull/177))
+
 ## [1.1.1](https://github.com/oxc-project/fast-glob/compare/v1.1.0...v1.1.1) - 2026-08-31
 
 ### Fixed

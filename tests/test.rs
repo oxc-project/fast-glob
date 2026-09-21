@@ -1526,6 +1526,13 @@ mod tests {
         assert!(glob_match("a/{a,b,c}", "a/c"));
         assert!(glob_match("a{b,bc}.txt", "abc.txt"));
 
+        // A brace delimiter is the logical end of its selected branch, so a
+        // `**` alternative can still occupy a complete path segment.
+        assert!(glob_match("{**,file}", "some/deep/path"));
+        assert!(glob_match("root/{**,file}", "root/some/deep/path"));
+        assert!(glob_match("root/{**,file}/leaf", "root/some/deep/leaf"));
+        assert!(glob_match("{{**,file},other}", "some/deep/path"));
+
         assert!(glob_match("foo[{a,b}]baz", "foo{baz"));
 
         assert!(!glob_match("a{,b}.txt", "abc.txt"));

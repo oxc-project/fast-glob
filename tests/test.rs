@@ -496,7 +496,7 @@ mod tests {
         assert!(glob_match("[a-y]*[^c]", "bd"));
         assert!(glob_match("[a-y]*[^c]", "bb"));
         assert!(glob_match("[a-y]*[^c]", "bcd"));
-        assert!(glob_match("[a-y]*[^c]", "bdir/"));
+        assert!(!glob_match("[a-y]*[^c]", "bdir/"));
         assert!(!glob_match("[a-y]*[^c]", "Beware"));
         assert!(!glob_match("[a-y]*[^c]", "c"));
         assert!(glob_match("[a-y]*[^c]", "ca"));
@@ -706,9 +706,20 @@ mod tests {
 
     #[test]
     fn bash_slashmatch() {
-        // assert!(!glob_match("f[^eiu][^eiu][^eiu][^eiu][^eiu]r", "foo/bar"));
-        assert!(glob_match("foo[/]bar", "foo/bar"));
+        assert!(!glob_match("f[^eiu][^eiu][^eiu][^eiu][^eiu]r", "foo/bar"));
+        assert!(!glob_match("foo[/]bar", "foo/bar"));
         assert!(glob_match("f[^eiu][^eiu][^eiu][^eiu][^eiu]r", "foo-bar"));
+    }
+
+    #[test]
+    fn character_classes_do_not_match_separators() {
+        assert!(!glob_match("[!a]", "/"));
+        assert!(!glob_match("[/]", "/"));
+
+        assert!(!glob_match("*[!a]", "b/"));
+        assert!(!glob_match("*[!a]*", "b/"));
+        assert!(!glob_match("a[!a]*", "a/"));
+        assert!(!glob_match("[!a][!a]*", "b/"));
     }
 
     #[test]

@@ -47,7 +47,7 @@
 //! | `?`     | Matches any single character.                                                                                                                                                                       |
 //! | `*`     | Matches zero or more characters, except for path separators (e.g., `/`).                                                                                                                             |
 //! | `**`    | Matches zero or more characters, including path separators. Must match a complete path segment (i.e., followed by a `/` or the end of the pattern).                                                  |
-//! | `[ab]`  | Matches one of the characters contained in the brackets. Character ranges, e.g., `[a-z]`, are also supported. Use `[!ab]` or `[^ab]` to match any character _except_ those contained in the brackets. |
+//! | `[ab]`  | Matches one of the characters contained in the brackets, except path separators. Character ranges, e.g., `[a-z]`, are also supported. Use `[!ab]` or `[^ab]` to match any character _except_ those contained in the brackets. |
 //! | `{a,b}` | Matches one of the patterns contained in the braces. Any of the wildcard characters can be used in the sub-patterns. Patterns may contain up to 10 brace groups, nested up to 10 levels deep.        |
 //! | `!`     | When at the start of the glob, this negates the result. Multiple `!` characters negate the glob multiple times.                                                                                     |
 //! | `\`     | A backslash character may be used to escape any of the above special characters.                                                                                                                    |
@@ -591,7 +591,7 @@ impl State {
                         }
 
                         self.glob_index += 1;
-                        if is_match != negated {
+                        if is_match != negated && !is_separator(c as char) {
                             self.path_index += 1;
                             continue;
                         }

@@ -1695,6 +1695,15 @@ mod tests {
     }
 
     #[test]
+    fn literals_after_closed_brace_groups() {
+        assert!(!glob_match("{}{},", ""));
+        assert!(glob_match("{}{},", ","));
+        assert!(glob_match("{}{}}", "}"));
+        assert!(glob_match("{a,{b,c}}{},", "b,"));
+        assert!(!glob_match("{a,{b,c}}{},", "b"));
+    }
+
+    #[test]
     fn not_paired_braces() {
         assert!(!glob_match("{a,}}", "a"));
         assert!(glob_match("{a,}}", "a}"));

@@ -379,7 +379,9 @@ impl State {
 
         let mut branch_state = self.clone();
         branch_state.glob_index = branch_index;
-        branch_state.brace_depth = brace_stack.len();
+        // The stack also contains choices for earlier sequential groups, so
+        // derive syntactic nesting from the parent state instead of its length.
+        branch_state.brace_depth = self.brace_depth + 1;
 
         let matched =
             branch_state.glob_match_from(glob, path, branch_index, brace_stack, invalid_pattern);

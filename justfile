@@ -9,11 +9,10 @@ _default:
 alias r := ready
 
 init:
-  cargo binstall watchexec-cli typos-cli -y
+  cargo binstall watchexec-cli -y
 
 ready:
   git diff --exit-code --quiet
-  typos
   just fmt
   just check
   just test

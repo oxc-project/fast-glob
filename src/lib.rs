@@ -412,7 +412,7 @@ impl State {
     }
 
     fn match_brace(
-        &mut self,
+        &self,
         glob: &[u8],
         path: &[u8],
         brace_stack: &mut BraceStack,
@@ -420,60 +420,68 @@ impl State {
     ) -> bool {
         let mut brace_depth = 0;
         let mut has_closing_brace = false;
+        // Each branch matches the remaining pattern; keep scanning syntax
+        // after success, but skip any further matching attempts.
         let mut matched = false;
 
         let open_brace_index = self.glob_index;
+        // Branches inherit the parent state; only the scanner needs this cursor.
+        let mut glob_index = self.glob_index;
 
         let mut branch_index = 0;
 
-        while self.glob_index < glob.len() {
-            match glob[self.glob_index] {
+        while glob_index < glob.len() {
+            match glob[glob_index] {
                 b'{' => {
                     brace_depth += 1;
                     if brace_depth == 1 {
-                        branch_index = self.glob_index + 1;
+                        branch_index = glob_index + 1;
                     }
                 }
                 b'}' => {
                     brace_depth -= 1;
                     if brace_depth == 0 {
                         has_closing_brace = true;
-                        if self.match_brace_branch(
-                            glob,
-                            path,
-                            open_brace_index,
-                            branch_index,
-                            brace_stack,
-                            invalid_pattern,
-                        ) {
+                        if !matched
+                            && self.match_brace_branch(
+                                glob,
+                                path,
+                                open_brace_index,
+                                branch_index,
+                                brace_stack,
+                                invalid_pattern,
+                            )
+                        {
                             matched = true;
                         }
                         break;
                     }
                 }
                 b',' if brace_depth == 1 => {
-                    if self.match_brace_branch(
-                        glob,
-                        path,
-                        open_brace_index,
-                        branch_index,
-                        brace_stack,
-                        invalid_pattern,
-                    ) {
+                    if !matched
+                        && self.match_brace_branch(
+                            glob,
+                            path,
+                            open_brace_index,
+                            branch_index,
+                            brace_stack,
+                            invalid_pattern,
+                        )
+                    {
                         matched = true;
                     }
-                    branch_index = self.glob_index + 1;
+                    branch_index = glob_index + 1;
                 }
                 b'[' => {
                     // An unclosed class swallows the rest of the glob,
                     // leaving the brace unclosed as well.
-                    self.glob_index = skip_class(glob, self.glob_index).unwrap_or(glob.len());
+                    glob_index = skip_class(glob, glob_index).unwrap_or(glob.len());
                     continue;
                 }
-                b'\\' => self.glob_index += 1,
+                b'\\' => glob_index += 1,
                 _ => (),
             }
-            self.glob_index += 1;
+            glob_index += 1;
         }
 
         if !has_closing_brace {
